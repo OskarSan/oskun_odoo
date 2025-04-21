@@ -1337,6 +1337,7 @@ class SaleOrderLine(models.Model):
         order = self.env['sale.order'].browse(self.env.context.get('order_id'))
         return order.with_context(child_field='order_line').action_add_from_catalog()
 
+   
     #=== BUSINESS METHODS ===#
 
     def _expected_date(self):

@@ -154,6 +154,7 @@ class SaleOrder(models.Model):
              "otherwise the sales journal with the lowest sequence is used.")
 
     # Partner-based computes
+
     note = fields.Html(
         string="Terms and conditions",
         compute='_compute_note',

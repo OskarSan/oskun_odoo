@@ -354,6 +354,19 @@ class SaleOrderLine(models.Model):
         procurements = []
         for line in self:
             line = line.with_company(line.company_id)
+
+            # Restrict delivery if advanced invoicing is enabled
+            if line.order_id.partner_id.advanced_invoicing:
+                invoices = self.env['account.move'].search([
+                    ('invoice_origin', '=', line.order_id.name),
+                    ('move_type', '=', 'out_invoice'),
+                    ('state', '=', 'posted'),
+                    ('payment_state', '=', 'paid'),
+                ])
+                if not invoices:
+                   continue
+
+
             if line.state != 'sale' or line.order_id.locked or line.product_id.type != 'consu':
                 continue
             qty = line._get_qty_procurement(previous_product_uom_qty)

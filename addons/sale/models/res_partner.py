@@ -17,6 +17,9 @@ class ResPartner(models.Model):
     sale_warn = fields.Selection(WARNING_MESSAGE, 'Sales Warnings', default='no-message', help=WARNING_HELP)
     sale_warn_msg = fields.Text('Message for Sales Order')
 
+    #added the advance invoicing field
+    advanced_invoicing = fields.Boolean(string="Advanced Invoicing", help="Enable advanced invoicing for this customer.")
+
     @api.model
     def _get_sale_order_domain_count(self):
         return []
