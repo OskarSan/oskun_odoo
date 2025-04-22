@@ -1066,7 +1066,22 @@ class AccountPayment(models.Model):
         self.filtered(lambda pay: pay.state in {False, 'draft', 'in_process'}).state = 'in_process'
 
     def action_validate(self):
+        print("tekeeks täätän")
         self.state = 'paid'
+
+        # Check if the payment is linked to an invoice
+        for payment in self:
+            invoices = payment.reconciled_invoice_ids
+            for invoice in invoices:
+                if invoice.move_type == 'out_invoice' and invoice.invoice_origin:
+                    sale_order = self.env['sale.order'].search([('name', '=', invoice.invoice_origin)], limit=1)
+                    if sale_order and sale_order.partner_id.advanced_invoicing:
+                        # Find the related delivery order
+                        picking = self.env['stock.picking'].search([('sale_id', '=', sale_order.id), ('state', 'not in', ['done', 'cancel'])], limit=1)
+                        if picking:
+                            # Check if the invoice is fully paid
+                            if invoice.payment_state == 'paid':
+                                picking.button_validate()
 
     def action_reject(self):
         self.state = 'rejected'

@@ -1396,6 +1396,9 @@ class Picking(models.Model):
         self.package_level_ids.filtered(lambda p: not p.move_ids).unlink()
 
     def button_validate(self):
+
+        print("button validated AAAAAAAAAAA")
+
         draft_picking = self.filtered(lambda p: p.state == 'draft')
         draft_picking.action_confirm()
         for move in draft_picking.move_ids:

@@ -5236,6 +5236,25 @@ class AccountMove(models.Model):
             }
         if self:
             self._post(soft=False)
+         # Check for customers with "Advanced Invoicing"
+        for move in self:
+            if move.is_invoice(include_receipts=True) and move.partner_id.advanced_invoicing:
+                # Find related delivery orders
+                pickings = self.env['stock.picking'].search([
+                    ('sale_id', '=', move.invoice_origin),
+                    ('state', 'not in', ['done', 'cancel']),
+                ])
+                for picking in pickings:
+                    # Ensure the invoice is fully paid before validating the delivery
+                    if move.payment_state != 'paid':
+                        raise UserError(_(
+                            "The delivery order '%s' cannot be validated because the invoice '%s' "
+                            "has not been fully paid.",
+                            picking.name, move.name
+                        ))
+                    # Validate the delivery order
+                    picking.button_validate()
+
         if autopost_bills_wizard := self._show_autopost_bills_wizard():
             return autopost_bills_wizard
         return False
@@ -6221,6 +6240,18 @@ class AccountMove(models.Model):
 
     def _invoice_paid_hook(self):
         ''' Hook to be overrided called when the invoice moves to the paid state. '''
+        print("AAAAAAAAAAAAAAAA")
+        print(self)
+        for move in self:
+            if move.is_invoice(include_receipts=True) and move.partner_id.advanced_invoicing:
+                # Find the related sales order
+                sale_order = self.env['sale.order'].search([('name', '=', move.invoice_origin)], limit=1)
+                if sale_order:
+                    # Call `_action_launch_stock_rule` on the order lines
+                    print(f"DEBUG: Triggering _action_launch_stock_rule for Sale Order {sale_order.name}")
+                    sale_order.order_line._action_launch_stock_rule()
+
+                    
 
     def _get_lines_onchange_currency(self):
         # Override needed for COGS

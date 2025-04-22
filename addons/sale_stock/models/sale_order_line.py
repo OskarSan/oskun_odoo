@@ -348,6 +348,7 @@ class SaleOrderLine(models.Model):
         sale order line. procurement group will launch '_run_pull', '_run_buy' or '_run_manufacture'
         depending on the sale order line product rule.
         """
+        print("DEBUG: launch_stock_rule")
         if self._context.get("skip_procurement"):
             return True
         precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
@@ -358,13 +359,10 @@ class SaleOrderLine(models.Model):
             # Restrict delivery if advanced invoicing is enabled
             if line.order_id.partner_id.advanced_invoicing:
                 invoices = self.env['account.move'].search([
-                    ('invoice_origin', '=', line.order_id.name),
-                    ('move_type', '=', 'out_invoice'),
-                    ('state', '=', 'posted'),
-                    ('payment_state', '=', 'paid'),
+                    ('payment_state', '=', 'paid')
                 ])
                 if not invoices:
-                   continue
+                   break
 
 
             if line.state != 'sale' or line.order_id.locked or line.product_id.type != 'consu':
